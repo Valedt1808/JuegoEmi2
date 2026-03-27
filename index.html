@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Aventura Rosadita de Emi</title>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: 'Trebuchet MS', 'Comic Sans MS', Arial, sans-serif;
+      background: linear-gradient(180deg, #ffd7eb 0%, #ffe9f5 38%, #fff6fb 100%);
+      overflow-x: hidden;
+      color: #8f3f69;
+    }
+
+    .rain {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .drop {
+      position: absolute;
+      top: -10vh;
+      opacity: 0.95;
+      animation: fall linear forwards;
+      filter: drop-shadow(0 4px 4px rgba(255, 129, 184, 0.18));
+      user-select: none;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-10vh) rotate(0deg) scale(0.8); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translateY(110vh) rotate(180deg) scale(1.08); opacity: 0.95; }
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 18px 12px 34px;
+    }
+
+    .card {
+      position: relative;
+      width: min(94vw, 760px);
+      background: rgba(255,255,255,0.97);
+      border: 4px solid #ffc6e2;
+      border-radius: 30px;
+      box-shadow: 0 18px 42px rgba(227, 105, 164, 0.18);
+      padding: 22px 18px 24px;
+      text-align: center;
+      overflow: hidden;
+      min-height: 78vh;
+    }
+
+    .sparkles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.55;
+      background:
+        radial-gradient(circle at 12% 10%, rgba(255,182,218,0.34) 0 10px, transparent 11px),
+        radial-gradient(circle at 90% 16%, rgba(255,214,234,0.42) 0 11px, transparent 12px),
+        radial-gradient(circle at 78% 82%, rgba(255,182,218,0.26) 0 8px, transparent 9px),
+        radial-gradient(circle at 18% 87%, rgba(255,214,234,0.30) 0 9px, transparent 10px);
+    }
+
+    h1, h2, h3 { margin: 0 0 12px; }
+    h1 {
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      color: #e35595;
+      text-shadow: 0 2px 0 #fff;
+      line-height: 1.05;
+    }
+    h2 {
+      font-size: clamp(1.4rem, 4.8vw, 2.1rem);
+      color: #cb4e89;
+    }
+    .subtitle {
+      font-size: 1.02rem;
+      line-height: 1.5;
+      color: #9f537c;
+      margin-bottom: 14px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #ffe4f0;
+      color: #ca4c88;
+      border: 2px solid #ffc8df;
+      padding: 8px 15px;
+      border-radius: 999px;
+      font-weight: bold;
+      margin-bottom: 14px;
+      font-size: 0.95rem;
+    }
+
+    .mascot {
+      font-size: clamp(3rem, 9vw, 5rem);
+      margin-bottom: 8px;
+      animation: floaty 2.5s ease-in-out infinite;
+      user-select: none;
+    }
+
+    @keyframes floaty {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .question-box, .panel {
+      position: relative;
+      background: linear-gradient(180deg, #fff9fc 0%, #ffeff7 100%);
+      border: 3px dashed #ffb9d8;
+      border-radius: 22px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    .question {
+      font-size: clamp(1.12rem, 4vw, 1.5rem);
+      font-weight: bold;
+      color: #c2467d;
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    @media (min-width: 560px) {
+      .options { grid-template-columns: 1fr 1fr; }
+    }
+
+    button {
+      border: none;
+      border-radius: 18px;
+      padding: 14px 14px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: bold;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+      box-shadow: 0 7px 15px rgba(231, 113, 172, 0.18);
+      min-height: 52px;
+    }
+    button:hover { transform: translateY(-2px) scale(1.01); }
+    button:active { transform: scale(0.98); }
+
+    .btn-main {
+      background: linear-gradient(180deg, #ff89bc 0%, #f568a9 100%);
+      color: white;
+    }
+
+    .btn-option {
+      background: white;
+      color: #b0477c;
+      border: 2px solid #ffc4de;
+    }
+
+    .btn-small {
+      background: #ffe6f2;
+      color: #c44b85;
+      border: 2px solid #ffcade;
+      padding: 11px 14px;
+      min-height: 46px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .message {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      font-weight: bold;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.45;
+    }
+    .good { background: #e9fff1; color: #2c895f; border: 2px solid #bcefcf; }
+    .bad { background: #fff1f6; color: #b34675; border: 2px solid #ffc8dc; }
+    .neutral { background: #fff7fb; color: #a2557c; border: 2px solid #ffd6e8; }
+
+    .progress {
+      margin: 15px auto 6px;
+      width: min(500px, 94%);
+      height: 18px;
+      background: #ffe7f2;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 2px solid #ffd2e4;
+    }
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff8dbc, #ffc2de);
+      transition: width 0.35s ease;
+    }
+
+    .tiny-note {
+      margin-top: 10px;
+      color: #b35c88;
+      font-size: 0.98rem;
+      line-height: 1.45;
+    }
+
+    .instructions {
+      background: #fff8fc;
+      border: 3px dashed #ffbfdc;
+      border-radius: 18px;
+      padding: 14px;
+      text-align: left;
+      max-width: 540px;
+      margin: 12px auto 0;
+      color: #9c4d78;
+      line-height: 1.55;
+    }
+
+    canvas {
+      background: linear-gradient(180deg, #fff3f9 0%, #ffe6f2 65%, #ffd8e9 100%);
+      border: 4px solid #ffc9df;
+      border-radius: 20px;
+      max-width: 100%;
+      margin-top: 12px;
+      box-shadow: inset 0 -18px 0 rgba(255,255,255,0.36);
+      touch-action: manipulation;
+      display: block;
+    }
+
+    .jump-tip {
+      font-size: 0.96rem;
+      color: #b25b87;
+      margin-top: 10px;
+    }
+
+    .big-icon {
+      font-size: clamp(6rem, 16vw, 10rem);
+      display: inline-block;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.2s ease;
+      margin: 8px 0 4px;
+      animation: floaty 2.2s ease-in-out infinite;
+    }
+    .big-icon:hover { transform: scale(1.08) rotate(-3deg); }
+
+    .burst {
+      position: fixed;
+      font-size: 32px;
+      pointer-events: none;
+      z-index: 30;
+      animation: burstUp 1.6s ease-out forwards;
+      user-select: none;
+    }
+    @keyframes burstUp {
+      0% { transform: translate(0,0) scale(0.7); opacity: 1; }
+      100% { transform: translate(var(--x), var(--y)) scale(1.35); opacity: 0; }
+    }
+
+    .starscore {
+      font-size: 1.02rem;
+      color: #bf4e85;
+      font-weight: bold;
+      margin-top: 6px;
+    }
+
+    .name-bounce {
+      display: inline-block;
+      animation: nameBounce 1.8s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    @keyframes nameBounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      20% { transform: translateY(-4px) scale(1.04); }
+      40% { transform: translateY(0) scale(1); }
+      60% { transform: translateY(-8px) scale(1.08) rotate(-2deg); }
+      80% { transform: translateY(0) scale(1.02) rotate(1deg); }
+    }
+
+    .sticker-burst {
+      position: fixed;
+      font-size: 28px;
+      pointer-events: none;
+      z-index: 35;
+      animation: stickerPop 1.2s ease-out forwards;
+      user-select: none;
+    }
+
+    @keyframes stickerPop {
+      0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+      15% { opacity: 1; }
+      100% { transform: translate(var(--x), var(--y)) scale(1.25); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="rain" id="rain"></div>
+  <div class="wrap">
+    <div class="card" id="app">
+      <div class="sparkles"></div>
+    </div>
+  </div>
+
+  <script>
+    const app = document.getElementById('app');
+    const rain = document.getElementById('rain');
+
+    const rainEmojis = ['🌸', '💖', '🎀', '🌷', '✨', '💕', '🩷'];
+    const burstEmojis = ['🌸', '💖', '💕', '🌷', '🎀', '✨', '🩷', '🌺', '⭐', '🐱', '😺'];
+    const stickerEmojis = ['⭐', '🌟', '🎀', '💖', '🩷'];
+    let activeUtterance = null;
+    let jumpKeyHandler = null;
+    let jumpTapHandler = null;
+
+    const gameState = {
+      stage: 0,
+      questionIndex: 0,
+      score: 0,
+      total: 0,
+      jumpLevel: 0,
+      stickers: 0,
+      voiceTimer: null
+    };
+
+    const stages = [
+      {
+        title: '🧮 Matemática divertida',
+        badge: 'Nivel 1',
+        mascot: '🗺️🎀',
+        intro: 'Emi la exploradora rosadita encontró un mapa mágico. Para avanzar, necesita tu ayuda con cuentas fáciles ✨',
+        questions: [
+          { q: '¿Cuánto es 5 + 4?', options: ['7', '9', '10'], answer: '9', good: '¡Bacán, Emi! Esa estuvo perfecta ✨', bad: 'Uyuyui, casi. Cuenta despacito y prueba de nuevo 🩷' },
+          { q: '¿Cuánto es 9 - 3?', options: ['6', '5', '7'], answer: '6', good: '¡Muy bien! Vas excelente 🌸', bad: 'Casi casi. Míralo con calma y vuelve a intentarlo 💡' },
+          { q: '¿Cuánto es 4 + 5?', options: ['9', '8', '10'], answer: '9', good: '¡Seca! Te salió increíble 🎉', bad: 'Mmm... prueba otra vez, tú puedes 💖' },
+          { q: '¿Cuánto es 2 x 4?', options: ['6', '10', '8'], answer: '8', good: '¡Sííí! Súper bien 🌷', bad: 'Casi. Piensa en dos grupos iguales ✨' },
+          { q: '¿Cuánto es 3 x 2?', options: ['5', '6', '8'], answer: '6', good: '¡Bacán! Eres una genia 🎀', bad: 'Uy, estuvo cerca. Respira y vuelve a mirar 💕' },
+          { q: '¿Cuánto es 4 x 3?', options: ['12', '10', '14'], answer: '12', good: '¡Increíble! Matemática superada 🩷', bad: 'No importa. Vamos otra vez con calma 🌸' }
+        ]
+      },
+      {
+        title: '🌍 Mundo y mapas',
+        badge: 'Nivel 2',
+        mascot: '🧭🌎',
+        intro: 'La exploradora Emi llegó al mundo de los mapas. Aquí hay pistas sobre el planeta, los puntos cardinales y el mar 🌊',
+        questions: [
+          { q: '¿Dónde sale el sol?', options: ['Norte', 'Oeste', 'Este'], answer: 'Este', good: '¡Correcto! Muy bien, exploradora ☀️', bad: 'No pasa nada. Piensa un poquito y prueba otra vez ☀️' },
+          { q: '¿En qué continente está Chile?', options: ['Europa', 'América', 'Asia'], answer: 'América', good: '¡Muy bien! Seguiste el mapa perfecto 🌎', bad: 'Pista: está en nuestro lado del mundo 🌎' },
+          { q: '¿Cuál de estas opciones sí es un océano?', options: ['Pacífico', 'Atacama', 'Sahara'], answer: 'Pacífico', good: '¡Eso! Elegiste súper bien 🌊', bad: 'Casi. Una opción tiene mucha agua 🌊' },
+          { q: 'Si miras hacia el norte, ¿qué queda a tu derecha?', options: ['Este', 'Oeste', 'Sur'], answer: 'Este', good: '¡Qué genial! Vas súper bien con la brújula 🧭', bad: 'Imagínate la brújula y vuelve a intentar 🧭' },
+          { q: '¿Cuántos continentes se enseñan normalmente en el colegio?', options: ['5', '6', '7'], answer: '6', good: '¡Excelente! Lo hiciste perfecto 🌍', bad: 'Piensa con calma y prueba de nuevo ✨' }
+        ]
+      },
+      {
+        title: '💖 Súper comportamiento',
+        badge: 'Nivel 3',
+        mascot: '👧🌸',
+        intro: 'Llegó el nivel del corazón lindo. Aquí gana la Emi que cuida, aprende, se ríe y trata bonito a su mamá 💕',
+        questions: [
+          { q: '¿Qué hace una niña bacán en la mañana?', options: ['Ir al colegio con ánimo', 'Hacer una rabieta gigante', 'Esconderse bajo la cama'], answer: 'Ir al colegio con ánimo', good: '¡Sí! Esa es una actitud hermosa ✨', bad: 'Mmm... intenta elegir la opción más valiente y linda 💖' },
+          { q: '¿Qué es mejor hacer con la mamá?', options: ['Darle cariño y tratarla bien', 'Hacerla enojar por deporte', 'No escuchar nunca'], answer: 'Darle cariño y tratarla bien', good: '¡Esooo! Mucho amor para mamá 🌷', bad: 'Piensa cuál opción tiene más amorcito 🌸' },
+          { q: '¿Qué ayuda a ser una exploradora inteligente?', options: ['Estudiar y aprender', 'No hacer tareas jamás', 'Olvidar el cuaderno'], answer: 'Estudiar y aprender', good: '¡Correcto! Aprender te hace brillar ⭐', bad: 'Casi. La exploradora valiente también estudia 💕' },
+          { q: '¿Qué es una buena idea a la hora de comer?', options: ['Comer bien para crecer fuerte', 'Esconder la comida en el bolsillo', 'Declarar guerra al almuerzo'], answer: 'Comer bien para crecer fuerte', good: '¡Jajaja sí! A comer para tener energía 💪🌸', bad: 'Piensa cuál opción ayuda a crecer fuerte y feliz 💖' },
+          { q: '¿Qué hace la Emi más tierna del universo?', options: ['Reírse mucho y dar abrazos', 'Poner cara de dragón todo el día', 'Gruñir por las esquinas'], answer: 'Reírse mucho y dar abrazos', good: '¡Exacto! Esa Emi es maravillosa 🩷', bad: 'Pista: la opción más tierna siempre gana 🌷' }
+        ]
+      }
+    ];
+
+    function speakText(text, delay = 0) {
+      try {
+        if (!('speechSynthesis' in window)) return;
+        if (gameState.voiceTimer) clearTimeout(gameState.voiceTimer);
+        const cleaned = String(text).replace(/[✨🌸💖💕🩷🎀🌷⭐☀️🌊🧭🎉🐱😺💪]/g, '').trim();
+        gameState.voiceTimer = window.setTimeout(() => {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(cleaned);
+          utterance.lang = 'es-CL';
+          utterance.rate = 0.9;
+          utterance.pitch = 1.12;
+          utterance.volume = 0.95;
+          activeUtterance = utterance;
+          window.speechSynthesis.speak(utterance);
+        }, delay);
+      } catch (e) {
+        console.warn('No se pudo reproducir voz', e);
+      }
+    }
+
+    function mascotSpeech(text) {
+      return '<div class="message neutral" style="margin-top:10px;">💬 ' + text + '</div>';
+    }
+
+    function escapeAttr(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function createRain() {
+      window.setInterval(() => {
+        const el = document.createElement('div');
+        el.className = 'drop';
+        el.textContent = rainEmojis[Math.floor(Math.random() * rainEmojis.length)];
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.animationDuration = (4 + Math.random() * 4) + 's';
+        el.style.fontSize = (18 + Math.random() * 20) + 'px';
+        rain.appendChild(el);
+        window.setTimeout(() => el.remove(), 8500);
+      }, 260);
+    }
+
+    function celebrateStickerBurst() {
+      const x = window.innerWidth / 2;
+      const y = window.innerHeight / 2;
+      for (let i = 0; i < 10; i++) {
+        const el = document.createElement('div');
+        el.className = 'sticker-burst';
+        el.textContent = stickerEmojis[Math.floor(Math.random() * stickerEmojis.length)];
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.setProperty('--x', ((Math.random() - 0.5) * 240) + 'px');
+        el.style.setProperty('--y', (-30 - Math.random() * 220) + 'px');
+        document.body.appendChild(el);
+        window.setTimeout(() => el.remove(), 1300);
+      }
+    }
+
+    function getTotalQuestions() {
+      return stages.reduce((acc, stage) => acc + stage.questions.length, 0);
+    }
+
+    function getDoneQuestions() {
+      let done = 0;
+      for (let i = 0; i < gameState.stage; i++) done += stages[i].questions.length;
+      done += gameState.questionIndex;
+      return done;
+    }
+
+    function stickerDisplay() {
+      const visible = '⭐'.repeat(Math.min(gameState.stickers, 12));
+      const extra = gameState.stickers > 12 ? ' +' + (gameState.stickers - 12) : '';
+      return visible + extra;
+    }
+
+    function renderHome() {
+      speakText('Hola Emi, soy tu exploradora rosadita. Vamos a jugar juntas.', 250);
+      app.innerHTML = [
+        '<div class="sparkles"></div>',
+        '<div class="badge">Juego especial para Emi 💖</div>',
+        '<div class="mascot">🧭🌸🎀</div>',
+        '<h1>Aventura Rosadita<br>de <span class="name-bounce">Emi</span></h1>',
+        '<p class="subtitle">Una exploradora mágica viajará por matemáticas, mapas, decisiones lindas y un mini juego de saltos. Todo en versión tierna, rosada y entretenida ✨</p>',
+        mascotSpeech('Hola Emi, soy tu exploradora rosadita. ¡Vamos a jugar juntas!'),
+        '<div class="panel">',
+        '  <div class="question">¿Lista para jugar, Emi? 🎮🌷</div>',
+        '  <p>Hay preguntas fáciles, desafíos divertidos y un premio final gigante y chistoso.</p>',
+        '  <div class="row"><button class="btn-main" onclick="startGame()">Comenzar aventura 🚀</button></div>',
+        '  <p class="tiny-note">Tip de exploradora: si te equivocas no pasa nada, siempre puedes volver a intentar 💕</p>',
+        '</div>'
+      ].join('');
+    }
+
+    function renderQuestion(message = '', type = 'neutral') {
+      if (!message) {
+        const introVoice = gameState.stage === 0
+          ? 'Emi, ayúdame con esta pregunta de matemáticas.'
+          : gameState.stage === 1
+            ? 'Emi, llegó una pregunta del mundo y los mapas.'
+            : 'Emi, llegó una pregunta del corazón lindo.';
+        speakText(introVoice);
+      }
+
+      const stage = stages[gameState.stage];
+      const question = stage.questions[gameState.questionIndex];
+      const percent = Math.round((getDoneQuestions() / gameState.total) * 100);
+      const helperText = gameState.stage === 0
+        ? 'Tú puedes con estas cuentas, Emi.'
+        : gameState.stage === 1
+          ? 'Usa tu brújula imaginaria, exploradora.'
+          : 'El corazón bonito siempre elige con amor.';
+
+      const optionsHtml = question.options
+        .map(option => '<button class="btn-option" onclick="checkAnswer(' + "'" + escapeAttr(option) + "'" + ')">' + option + '</button>')
+        .join('');
+
+      app.innerHTML = [
+        '<div class="sparkles"></div>',
+        '<div class="badge">' + stage.badge + '</div>',
+        '<div class="mascot">' + stage.mascot + '</div>',
+        '<h2>' + stage.title + '</h2>',
+        '<p class="subtitle">' + stage.intro + '</p>',
+        mascotSpeech(helperText),
+        '<div class="progress"><div class="bar" style="width:' + percent + '%"></div></div>',
+        '<div class="starscore">Puntos brillantes: ' + gameState.score + ' ✨ &nbsp;•&nbsp; Stickers: ' + stickerDisplay() + '</div>',
+        '<div class="tiny-note">Pregunta ' + (gameState.questionIndex + 1) + ' de ' + stage.questions.length + '</div>',
+        '<div class="question-box">',
+        '  <div class="question">' + question.q + '</div>',
+        '  <div class="options">' + optionsHtml + '</div>',
+        '  <div class="message ' + type + '">' + (message || 'Elige una opción 🌸') + '</div>',
+        '  <div class="row"><button class="btn-small" onclick="renderHome()">Volver al inicio</button></div>',
+        '</div>'
+      ].join('');
+    }
+
+    function startGame() {
+      gameState.stage = 0;
+      gameState.questionIndex = 0;
+      gameState.score = 0;
+      gameState.stickers = 0;
+      gameState.total = getTotalQuestions();
+      renderQuestion();
+    }
+
+    function playSound(type) {
+      try {
+        const sounds = {
+          good: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_5f6d3a9a.mp3?filename=success-1-6297.mp3',
+          bad: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_8b0c6f3b.mp3?filename=error-2-126514.mp3',
+          jump: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_2f1f7d5a.mp3?filename=jump-144244.mp3'
+        };
+        const audio = new Audio(sounds[type]);
+        audio.volume = 0.4;
+        audio.play().catch(() => {});
+      } catch (e) {
+        console.warn('No se pudo reproducir sonido', e);
+      }
+    }
+
+    function checkAnswer(selected) {
+      const stage = stages[gameState.stage];
+      const question = stage.questions[gameState.questionIndex];
+      const normalizedSelected = String(selected).replace(/&#39;/g, "'");
+
+      if (normalizedSelected === question.answer) {
+        playSound('good');
+        gameState.score += 1;
+        gameState.stickers += 1;
+        renderQuestion(question.good + ' Ganaste un sticker brillante 🌟', 'good');
+        celebrateStickerBurst();
+        speakText(question.good + ' Ganaste un sticker brillante.', 180);
+
+        window.setTimeout(() => {
+          gameState.questionIndex += 1;
+          if (gameState.questionIndex >= stage.questions.length) {
+            gameState.stage += 1;
+            gameState.questionIndex = 0;
+            if (gameState.stage >= stages.length) {
+              renderJumpIntro();
+            } else {
+              renderQuestion();
+            }
+          } else {
+            renderQuestion();
+          }
+        }, 1650);
+      } else {
+        playSound('bad');
+        renderQuestion(question.bad, 'bad');
+        speakText(question.bad, 120);
+      }
+    }
+
+    function renderJumpIntro() {
+      speakText('Emi, toca la pantalla para saltar cuando venga el obstáculo.');
+      app.innerHTML = [
+        '<div class="sparkles"></div>',
+        '<div class="badge">Nivel final de acción</div>',
+        '<div class="mascot">🧍‍♀️🎒🌸</div>',
+        '<h2>🏃 Saltitos de Emi</h2>',
+        '<p class="subtitle">Ahora Emi exploradora debe saltar para esquivar obstáculos rosaditos y llegar al premio final.</p>',
+        mascotSpeech('Toca la pantalla cuando venga el obstáculo. Yo sé que puedes.'),
+        '<div class="instructions">',
+        '  <strong>Instrucciones cortitas:</strong><br>',
+        '  • <strong>Toca la pantalla o el canvas</strong> para saltar 📱<br>',
+        '  • También funciona con <strong>ESPACIO</strong> si lo abres en computador 💻<br>',
+        '  • Hay <strong>2 rondas</strong><br>',
+        '  • La primera es suave y la segunda un poquito más rápida<br>',
+        '  • Esquiva <strong>5 obstáculos</strong> por ronda y ganas ✨',
+        '</div>',
+        '<div class="row"><button class="btn-main" onclick="startJumpGame(1)">Comenzar salto 🌷</button></div>',
+        '<p class="tiny-note">Tranqui Emi, esta parte está pensada para jugarla desde el celu 💖</p>'
+      ].join('');
+    }
+
+    function startJumpGame(level) {
+      speakText(level === 1 ? 'Primera ronda de saltos. Vamos con calma.' : 'Segunda ronda. Más rápida, pero tú puedes.');
+      gameState.jumpLevel = level;
+
+      app.innerHTML = [
+        '<div class="sparkles"></div>',
+        '<div class="badge">Ronda ' + level + ' de 2</div>',
+        '<div class="mascot">👧🎒</div>',
+        '<h2>' + (level === 1 ? 'Saltito suave 🌷' : 'Saltito valiente 💖') + '</h2>',
+        '<p class="subtitle">Toca la pantalla para saltar</p>',
+        '<canvas id="jumpCanvas" width="640" height="260"></canvas>',
+        '<div class="message neutral" id="jumpMsg">Esquiva 5 obstáculos para ganar esta ronda ✨</div>',
+        '<div class="jump-tip">Tip: toca apenas veas venir el obstáculo 📱</div>',
+        mascotSpeech(level === 1 ? 'Vamos suavecito primero.' : 'Ahora un poquito más rápido, pero tú puedes.')
+      ].join('');
+
+      const canvas = document.getElementById('jumpCanvas');
+      const ctx = canvas.getContext('2d');
+      const groundY = 178;
+      const player = { x: 90, y: groundY, vy: 0, grounded: true };
+      const obstacle = { x: 720, y: 186 };
+      const clouds = [{ x: 80, y: 54 }, { x: 240, y: 40 }, { x: 430, y: 65 }, { x: 580, y: 50 }];
+      const gravity = 0.78;
+      const speed = level === 1 ? 4.1 : 5.0;
+      let cleared = 0;
+      const target = 5;
+      let ended = false;
+
+      function jump(e) {
+        if (e) e.preventDefault();
+        playSound('jump');
+        if (player.grounded && !ended) {
+          player.vy = -13;
+          player.grounded = false;
+        }
+      }
+
+      if (jumpKeyHandler) document.removeEventListener('keydown', jumpKeyHandler);
+      jumpKeyHandler = function (e) {
+        if (e.code === 'Space') jump(e);
+      };
+      document.addEventListener('keydown', jumpKeyHandler);
+
+      jumpTapHandler = jump;
+      canvas.addEventListener('pointerdown', jumpTapHandler, { passive: false });
+      canvas.addEventListener('touchstart', jumpTapHandler, { passive: false });
+      canvas.addEventListener('click', jumpTapHandler);
+
+      function cleanup() {
+        if (jumpKeyHandler) document.removeEventListener('keydown', jumpKeyHandler);
+        if (jumpTapHandler) {
+          canvas.removeEventListener('pointerdown', jumpTapHandler);
+          canvas.removeEventListener('touchstart', jumpTapHandler);
+          canvas.removeEventListener('click', jumpTapHandler);
+        }
+      }
+
+      function drawBackground() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff6fb';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        clouds.forEach(cloud => {
+          ctx.font = '28px Arial';
+          ctx.fillText('☁️', cloud.x, cloud.y);
+          cloud.x -= 0.35;
+          if (cloud.x < -40) cloud.x = canvas.width + Math.random() * 100;
+        });
+
+        ctx.font = '26px Arial';
+        ctx.fillText('🌈', canvas.width - 70, 48);
+
+        ctx.fillStyle = '#ffcde3';
+        ctx.fillRect(0, 220, canvas.width, 40);
+
+        for (let i = 0; i < canvas.width; i += 40) {
+          ctx.font = '18px Arial';
+          ctx.fillText('🌸', i, 239);
+        }
+      }
+
+      function drawPlayer() {
+        ctx.font = '44px Arial';
+        ctx.fillText('👧', player.x, player.y + 35);
+        ctx.font = '20px Arial';
+        ctx.fillText('🎀', player.x + 18, player.y + 6);
+      }
+
+      function drawObstacle() {
+        ctx.font = '34px Arial';
+        ctx.fillText(level === 1 ? '🧸' : '📚', obstacle.x, obstacle.y + 28);
+      }
+
+      function drawInfo() {
+        ctx.fillStyle = '#b04b7f';
+        ctx.font = 'bold 20px Trebuchet MS';
+        ctx.fillText('Obstáculos: ' + cleared + '/' + target, 18, 28);
+      }
+
+      function loop() {
+        if (ended) return;
+
+        drawBackground();
+
+        player.vy += gravity;
+        player.y += player.vy;
+        if (player.y >= groundY) {
+          player.y = groundY;
+          player.vy = 0;
+          player.grounded = true;
+        }
+
+        obstacle.x -= speed;
+        if (obstacle.x < -45) {
+          obstacle.x = canvas.width + 90 + Math.random() * 140;
+          cleared += 1;
+          const jumpMsg = document.getElementById('jumpMsg');
+          if (jumpMsg) {
+            jumpMsg.textContent = '¡Bacán! Ya esquivaste ' + cleared + ' obstáculo' + (cleared > 1 ? 's' : '') + ' ✨';
+          }
+          if (cleared === 2 || cleared === 4) speakText('Muy bien Emi, sigue así.');
+          if (cleared >= target) {
+            ended = true;
+            cleanup();
+            window.setTimeout(() => {
+              if (level === 1) {
+                renderBetweenJumpLevels();
+              } else {
+                renderFinal();
+              }
+            }, level === 1 ? 850 : 900);
+            return;
+          }
+        }
+
+        const playerFront = player.x + 18;
+        const playerBack = player.x + 38;
+        const obstacleFront = obstacle.x;
+        const obstacleBack = obstacle.x + 22;
+        const collision = obstacleFront < playerBack && obstacleBack > playerFront && player.y + 36 > obstacle.y + 2;
+
+        if (collision) {
+          ended = true;
+          cleanup();
+          renderJumpRetry(level);
+          return;
+        }
+
+        drawPlayer();
+        drawObstacle();
+        drawInfo();
+        window.requestAnimationFrame(loop);
+      }
+
+      loop();
+    }
+
+    function renderJumpRetry(level) {
+      app.innerHTML = [
+        '<div class="sparkles"></div>',
+        '<div class="badge">Oops 💕</div>',
+        '<div class="mascot">🧸💫</div>',
+        '<h2>' + (level === 1 ? 'Casi casi' : 'Uy, estuvo cerquita') + '</h2>',
+        '<div class="question-box">',
+        '  <div class="question">No importa, Emi. ¡Puedes intentarlo otra vez! 🌸</div>',
+        '  <div class="message bad">Los errores también ayudan a aprender y mejorar 💖</div>',
+        '  <div class="row">',
+        '    <button class="btn-main" onclick="startJumpGame(' + level + ')">Intentar de nuevo</button>',
+        '    <button class="btn-small" onclick="renderJumpIntro()">Ver instrucciones</button>',
+        '  </div>',
+        '</div>'
+      ].join('');
+    }
+
+    function renderBetweenJumpLevels() {
+      speakText('Muy bien Emi. Ahora viene la segunda ronda.');
+      app.innerHTML = [
+        '<div class="sparkles"></div>',
+        '<div class="badge">¡Muy bien! 🌷</div>',
+        '<div class="mascot">🏅🩷</div>',
+        '<h2>Superaste la ronda 1</h2>',
+        '<div class="question-box">',
+        '  <div class="question">Ahora viene una ronda un poquito más rápida... pero tú puedes, Emi exploradora 💖</div>',
+        '  <div class="message good">Respira, prepárate... ¡y a saltar! ✨</div>',
+        '  <div class="row"><button class="btn-main" onclick="startJumpGame(2)">Ir a ronda 2</button></div>',
+        '</div>'
+      ].join('');
+    }
+
+    function renderFinal() {
+      const mensajeExtra = 'Te amamos muchísimo 💖 sigue siendo tan linda, divertida y valiente como siempre 🌸';
+      speakText('Lo lograste Emi. Eres valiente, inteligente y maravillosa. Sigue aprendiendo, riéndote mucho, queriendo bonito a tu mamá y brillando como la estrella que eres');
+      app.innerHTML = [
+        '<div class="sparkles"></div>',
+        '<div class="badge">Premio final gigante ✨🐱</div>',
+        '<div class="mascot">🎉🌸🩷</div>',
+        '<h1>¡Lo lograste, Emi!</h1>',
+        '<p class="subtitle">Fuiste valiente, inteligente, divertida y una exploradora maravillosa 🌷</p>',
+        '<div class="question-box">',
+        '  <div class="question">Tu premio tierno, gigante y chistoso te está esperando 💕</div>',
+        '  <div class="big-icon" onclick="burstLove(event)" title="Tócame">🐱🎀</div>',
+        '  <div class="message good">Toca la gatita para llenar todo de corazones, flores, gatitos, ternurita y celebración ✨</div>',
+        '  <p class="tiny-note">Emi, eres una niña muy especial: curiosa, inteligente, alegre y llena de luz 💖 Sigue aprendiendo, riéndote mucho, queriendo bonito a tu mamá y brillando como la estrella rosadita que eres 🌸</p>',
+        '  <p class="tiny-note">' + mensajeExtra + '</p>',
+        mascotSpeech('Premio final desbloqueado. Toca la gatita para llenar todo de ternura.'),
+        '  <div class="row">',
+        '    <button class="btn-main" onclick="burstLoveCenter()">Más ternura 🌸</button>',
+        '    <button class="btn-small" onclick="renderHome()">Jugar otra vez</button>',
+        '  </div>',
+        '</div>'
+      ].join('');
+    }
+
+    function burstLove(event) {
+      speakText('Lluvia de ternura y gatitos para Emi.', 120);
+      const x = (event && event.clientX) ? event.clientX : window.innerWidth / 2;
+      const y = (event && event.clientY) ? event.clientY : window.innerHeight / 2;
+      for (let i = 0; i < 28; i++) {
+        const el = document.createElement('div');
+        el.className = 'burst';
+        el.textContent = burstEmojis[Math.floor(Math.random() * burstEmojis.length)];
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.setProperty('--x', ((Math.random() - 0.5) * 360) + 'px');
+        el.style.setProperty('--y', (-30 - Math.random() * 300) + 'px');
+        document.body.appendChild(el);
+        window.setTimeout(() => el.remove(), 1700);
+      }
+    }
+
+    function burstLoveCenter() {
+      const x = window.innerWidth / 2;
+      const y = window.innerHeight / 2 + 30;
+      for (let i = 0; i < 46; i++) {
+        const el = document.createElement('div');
+        el.className = 'burst';
+        el.textContent = burstEmojis[Math.floor(Math.random() * burstEmojis.length)];
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.setProperty('--x', ((Math.random() - 0.5) * 520) + 'px');
+        el.style.setProperty('--y', (-20 - Math.random() * 360) + 'px');
+        document.body.appendChild(el);
+        window.setTimeout(() => el.remove(), 1800);
+      }
+    }
+
+    function runSelfTests() {
+      console.assert(getTotalQuestions() === 16, 'Total de preguntas debe ser 16');
+      console.assert(escapeAttr("a'b\"c").includes('&#39;'), 'Debe escapar comillas simples');
+      console.assert(escapeAttr("a'b\"c").includes('&quot;'), 'Debe escapar comillas dobles');
+      gameState.stickers = 3;
+      console.assert(stickerDisplay() === '⭐⭐⭐', 'Debe mostrar 3 stickers');
+      gameState.stickers = 14;
+      console.assert(stickerDisplay() === '⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ +2', 'Debe compactar stickers extra');
+      gameState.stickers = 0;
+    }
+
+    runSelfTests();
+    createRain();
+    renderHome();
+
+    window.startGame = startGame;
+    window.renderHome = renderHome;
+    window.checkAnswer = checkAnswer;
+    window.startJumpGame = startJumpGame;
+    window.renderJumpIntro = renderJumpIntro;
+    window.burstLove = burstLove;
+    window.burstLoveCenter = burstLoveCenter;
+  </script>
+</body>
+</html>
